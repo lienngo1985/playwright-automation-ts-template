@@ -35,7 +35,7 @@ test.describe('Todos', () => {
         await checkNumberOfTodosInLocalStorage(page, 3)
     });
 
-    test('Verify text field is clear when an item is added to todo list', async ({ page }) => {
+    test('Verify text field is clear when a todo item is added to todo list', async ({ page }) => {
         const newTodo = page.getByPlaceholder('What needs to be done?');
         
         // Add todo item
@@ -49,7 +49,7 @@ test.describe('Todos', () => {
         await checkNumberOfTodosInLocalStorage(page, 1)
     })
 
-    test('Verify the user can mark added items as completed', async ({ page }) => {
+    test('Verify the user can mark added todo items as completed', async ({ page }) => {
         const newTodo = page.getByPlaceholder('What needs to be done?');
 
         // add 1st todo item and mark it as completed
@@ -72,7 +72,34 @@ test.describe('Todos', () => {
         // check items completed in Local Storage
         await checkTodosCompletedInLocalStorage(page, 2);
     })
+
+    test('Verify the user can edit a todo item', async ({ page }) => {
+ 
+        createTodoListItems(page, TODO_ITEMS);
+
+        const newTodo = page.getByPlaceholder('What needs to be done?');
+        const thirdTodo = page.locator('//li[@data-testid="todo-item"]').nth(2);
+
+        // edit 3rd todo item
+        await thirdTodo.dblclick();
+        await thirdTodo.getByRole('textbox', {name: 'Edit'}).fill('have parent appointment at 5:00 PM');
+        await thirdTodo.getByRole('textbox', {name: 'Edit'}).press('Enter');
+
+        // check item is editted successfully
+        await expect(page.locator('//li[@data-testid="todo-item"]')).toHaveText([TODO_ITEMS[0], TODO_ITEMS[1], 'have parent appointment at 5:00 PM']);
+
+        await checkTodosInLocalStorage(page, 'have parent appointment at 5:00 PM');
+    })
 })
+
+async function createTodoListItems(page: Page, list) {
+    const newTodo = page.getByPlaceholder('What needs to be done?');
+
+    for (const item of list) {
+        await newTodo.fill(item);
+        await newTodo.press('Enter');
+    }
+}
 
 async function checkNumberOfTodosInLocalStorage(page: Page, expected: number) {
     const noOfTodos = await page.waitForFunction(e => {
@@ -82,11 +109,20 @@ async function checkNumberOfTodosInLocalStorage(page: Page, expected: number) {
 }
 
 async function checkTodosCompletedInLocalStorage(page: Page, expected: number){
-    const noOfCompletedTodo = await page.waitForFunction( e => {
+    const noOfCompletedTodo = await page.waitForFunction(e => {
         return JSON.parse(localStorage['react-todos']).filter(
             (todo: Record<string, unknown>) => todo.completed).length === e
     }, expected)
 };
+
+async function checkTodosInLocalStorage(page: Page, title: string) {
+    const checkTodos = await page.waitForFunction(t => {
+        return JSON.parse(localStorage['react-todos'])
+        .map((todo: Record<string, unknown>) => todo.title)
+        .includes(t);
+    }, title);
+    return checkTodos;
+}
 
 
 

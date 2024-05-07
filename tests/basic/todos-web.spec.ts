@@ -8,7 +8,7 @@ test.describe('Todos', () => {
         'pick-up children at 5:00 pm at school'
     ];
 
-    test.beforeEach ('simple navigation', async ({ page }) => {
+    test.beforeEach ('navigation', async ({ page }) => {
         await page.goto('https://demo.playwright.dev/todomvc/#/');
         await expect(page.getByRole('heading', { name: 'todos' })).toBeVisible();
     });
